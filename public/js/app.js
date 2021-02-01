@@ -64,6 +64,7 @@ var app = new Vue({
 					.then(function (response) {
 						setTimeout(function () {
 							$('#loginModal').modal('hide');
+							window.location.reload();
 						}, 500);
 					})
 			}

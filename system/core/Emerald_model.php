@@ -14,6 +14,7 @@ class CI_Emerald_Model {
 
     protected $id = NULL;
     protected $data = [];
+    protected $hidden = [];
 
     protected $_can_save = TRUE;
 
@@ -261,5 +262,19 @@ class CI_Emerald_Model {
         {
             throw new ShadowIgniterException('Sparrow should be loaded before model accessing!');
         }
+    }
+
+    /**
+     * "Transform" to array
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        $tmp = $this->data;
+        foreach ($this->hidden as $k) {
+           unset($tmp[$k]);
+        }
+        return $tmp;
     }
 }

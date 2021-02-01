@@ -84,24 +84,37 @@ class Main_page extends MY_Controller
     }
 
 
-    public function login($user_id)
+    public function login()
     {
         // Right now for tests we use from contriller
+
+        // This isn't working, have no time to investigate
+        // TODO: Investigate
         $login = App::get_ci()->input->post('login');
         $password = App::get_ci()->input->post('password');
+
+        // so do the bad way
+        $input = json_decode(App::get_ci()->input->raw_input_stream, true);
+
+        $login = @$input['login'];
+        $password = @$input['password'];
 
         if (empty($login) || empty($password)){
             return $this->response_error(CI_Core::RESPONSE_GENERIC_WRONG_PARAMS);
         }
 
-        // But data from modal window sent by POST request.  App::get_ci()->input...  to get it.
+        // But data from modal window sent by POST request.  App::get_ci()->input...  to get it. - nope, you can't :D
 
+        $user = User_model::getByEmail($login);
+        if (!$user || !password_verify($password, $user->get_password())) {
+            return $this->response_error('invalid_credentials');
+        }
 
-        //Todo: 1 st task - Authorisation.
+        // password_hash('123321', PASSWORD_BCRYPT);
 
-        Login_model::start_session($user_id);
+        Login_model::start_session($user);
 
-        return $this->response_success(['user' => $user_id]);
+        return $this->response_success(['user' => $user->toArray()]);
     }
 
 

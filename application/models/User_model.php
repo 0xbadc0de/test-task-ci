@@ -43,6 +43,8 @@ class User_model extends CI_Emerald_Model {
 
     private static $_current_user;
 
+    protected $hidden = ['password'];
+
     /**
      * @return string
      */
@@ -251,6 +253,11 @@ class User_model extends CI_Emerald_Model {
     {
         App::get_ci()->s->from(self::CLASS_TABLE)->insert($data)->execute();
         return new static(App::get_ci()->s->get_insert_id());
+    }
+
+    public function getByEmail(string $email)
+    {
+        return (new self())->set(App::get_ci()->s->from(self::CLASS_TABLE)->where(['email' => $email])->one());
     }
 
     public function delete()
