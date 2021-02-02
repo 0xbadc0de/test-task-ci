@@ -57,7 +57,20 @@ class Main_page extends MY_Controller
     }
 
 
-    public function comment($post_id,$message){ // or can be App::get_ci()->input->post('news_id') , but better for GET REQUEST USE THIS ( tests )
+    public function comment(){ // or can be App::get_ci()->input->post('news_id') , but better for GET REQUEST USE THIS ( tests )
+
+        $post_id = App::get_ci()->input->post('post_id');
+
+        // This isn't working (at least on nginx, php-fpm), have no time to investigate
+        // TODO: Investigate
+        $post_id = App::get_ci()->input->post('post_id');
+        $message = App::get_ci()->input->post('message');
+
+        // so do the bad way
+        $input = json_decode(App::get_ci()->input->raw_input_stream, true);
+
+        $post_id = @$input['post_id'];
+        $message = @$input['message'];
 
         if (!User_model::is_logged()){
             return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
@@ -76,8 +89,9 @@ class Main_page extends MY_Controller
             return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
         }
 
-        // Todo: 2 nd task Comment
-        $post->comment();
+        // 2 nd task Comment
+        // TODO: Reply_to realization
+        $post->comment($message);
 
         $posts =  Post_model::preparation($post, 'full_info');
         return $this->response_success(['post' => $posts]);

@@ -248,10 +248,10 @@ class CI_Emerald_Model {
         return $this;
     }
 
-    public function __debugInfo()
-    {
-        return (array)$this->object_beautify();
-    }
+//    public function __debugInfo()
+//    {
+//        return (array)$this->object_beautify();
+//    }
 
     /**
      * @throws ShadowIgniterException

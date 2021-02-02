@@ -3,7 +3,6 @@
 namespace Model;
 use App;
 use CI_Emerald_Model;
-use Comment_model;
 use Exception;
 use stdClass;
 
@@ -202,8 +201,14 @@ class Post_model extends CI_Emerald_Model {
         return (App::get_ci()->s->get_affected_rows() > 0);
     }
 
-    public function comment(){
-
+    // TODO: reply_to realization
+    public function comment($message, $replyTo = null){
+        return Comment_model::create([
+            'assign_id' => $this->id,
+            'text' => $message,
+            'reply_to' => $replyTo,
+            'user_id' => User_model::get_session_id()
+        ]);
     }
 
     /**
@@ -279,7 +284,6 @@ class Post_model extends CI_Emerald_Model {
     {
         $o = new stdClass();
 
-
         $o->id = $data->get_id();
         $o->img = $data->get_img();
 
@@ -288,9 +292,7 @@ class Post_model extends CI_Emerald_Model {
 
         $o->user = User_model::preparation($data->get_user(), 'main_page');
         $o->coments = Comment_model::preparation($data->get_comments(), 'full_info');
-
         $o->likes = rand(0, 25);
-
 
         $o->time_created = $data->get_time_created();
         $o->time_updated = $data->get_time_updated();

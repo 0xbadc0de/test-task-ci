@@ -56,4 +56,6 @@
 .likes .heart{
     margin-right: 5px;
 }
-
+li {
+    list-style: none;
+}

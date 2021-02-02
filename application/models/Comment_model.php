@@ -1,5 +1,11 @@
 <?php
 
+namespace Model;
+use App;
+use CI_Emerald_Model;
+use Exception;
+use stdClass;
+
 /**
  * Created by PhpStorm.
  * User: mr.incognito
@@ -16,10 +22,12 @@ class Comment_model extends CI_Emerald_Model
     /** @var int */
     protected $assing_id;
     /** @var string */
-    protected $text;
+    public $text;
+    /** @var int */
+    public $replies_count;
 
     /** @var string */
-    protected $time_created;
+    public $time_created;
     /** @var string */
     protected $time_updated;
 
@@ -27,6 +35,8 @@ class Comment_model extends CI_Emerald_Model
     protected $comments;
     protected $likes;
     protected $user;
+    /** @var array */
+    public $replies;
 
 
     /**
@@ -46,6 +56,25 @@ class Comment_model extends CI_Emerald_Model
     {
         $this->user_id = $user_id;
         return $this->save('user_id', $user_id);
+    }
+
+    /**
+     * @return int
+     */
+    public function get_replies_count(): int
+    {
+        return $this->replies_count;
+    }
+
+    /**
+     * @param int $assing_id
+     *
+     * @return bool
+     */
+    public function set_replies_count(int $repliesCount)
+    {
+        $this->replies_count = $repliesCount;
+        return $this->save('replies_count', $repliesCount);
     }
 
     /**
@@ -194,8 +223,60 @@ class Comment_model extends CI_Emerald_Model
      */
     public static function get_all_by_assign_id(int $assting_id)
     {
+        $data = App::get_ci()->s->from(self::CLASS_TABLE)
+            ->where(['assign_id' => $assting_id])
+            ->where(['reply_to' => null])
+            ->orderBy('time_created','ASC')
+            ->many();
 
-        $data = App::get_ci()->s->from(self::CLASS_TABLE)->where(['assign_id' => $assting_id])->orderBy('time_created','ASC')->many();
+        $ret = [];
+        foreach ($data as $i)
+        {
+            $comment = (new self())->set($i);
+            if ((int)$i['replies_count'] > 0) {
+                $replies = self::get_replies_tree($i['id']);
+                $comment->{'replies'} = self::build_tree($replies, $comment->id);
+            }
+            $ret[] = $comment;
+        }
+        return $ret;
+    }
+
+    function build_tree(array &$comments, $replyTo = 0) {
+        $final = [];
+
+        foreach ($comments as $comment) {
+            if ($comment->reply_to == $replyTo) {
+                $replies = self::build_tree($comments, $comment->id);
+                if ($replies) {
+                    $comment->replies = $replies;
+                }
+                $final[] = $comment;
+            }
+        }
+        return $final;
+    }
+
+    /**
+     * @param int $postId
+     * @return self[]
+     * @throws Exception
+     */
+    public static function get_replies_tree(int $postId)
+    {
+        $data = App::get_ci()->s->sql("WITH RECURSIVE nested_comments (id, reply_to, text, replies_count, personaname, lvl) AS
+        (
+          SELECT c.id, c.reply_to, c.text, c.replies_count, u.personaname, 0 lvl
+            FROM comment AS c
+            JOIN user AS u ON u.id = c.user_id
+            WHERE reply_to = ${postId}
+          UNION ALL
+          SELECT c.id, c.reply_to, c.text, c.replies_count, u.personaname, nc.lvl + 1
+            FROM nested_comments AS nc JOIN comment AS c
+              ON nc.id = c.reply_to
+            JOIN user AS u ON u.id = c.user_id
+        )SELECT * FROM nested_comments ORDER BY lvl")->many();
+
         $ret = [];
         foreach ($data as $i)
         {
@@ -235,6 +316,8 @@ class Comment_model extends CI_Emerald_Model
 
             $o->id = $d->get_id();
             $o->text = $d->get_text();
+            $o->replies = @$d->replies;
+            $o->replies_count = @$d->replies_count;
 
             $o->user = User_model::preparation($d->get_user(),'main_page');
 

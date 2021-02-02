@@ -1,3 +1,14 @@
+Vue.component("tree-item", {
+	template: "#item-template",
+	props: {
+		item: Object
+	},
+	data: function() {
+		return {
+			isOpen: false
+		};
+	}
+});
 var app = new Vue({
 	el: '#app',
 	data: {
@@ -42,6 +53,20 @@ var app = new Vue({
 			})
 	},
 	methods: {
+		sendComment: function() {
+			console.log('sendComment');
+			if (!this.post.id) {
+				alert('No post selected');
+				return;
+			}
+			axios.post('/main_page/comment', {
+				post_id: this.post.id,
+				message: this.commentText
+			}).then(function (response) {
+				console.log('sendComment() response:', response);
+				alert('Comment is added');
+			})
+		},
 		logout: function () {
 			console.log ('logout');
 		},
