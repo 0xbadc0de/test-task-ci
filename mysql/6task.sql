@@ -19,9 +19,16 @@ GROUP BY user_id, transaction_type, transaction_record;
  (end of the work day =/)
  */
 SELECT
-    user_id, SUM(amount), transaction_type, transaction_subject
+    user_id,
+    u.likes_balance AS likes_balance,
+    u.wallet_balance AS wallet_balance,
+    SUM(amount),
+    transaction_type,
+    transaction_subject
 FROM
     transaction
+        JOIN
+    user u ON u.id = user_id
 WHERE
         transaction_subject IN ('topup' , 'booster_pack')
-GROUP BY user_id , transaction_type, transaction_subject
+GROUP BY user_id , transaction_type , transaction_subject
