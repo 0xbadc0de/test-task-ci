@@ -2,10 +2,11 @@
 
 namespace Model;
 use App;
-use CI_Model;
+use CI_Emerald_Model;
 use CriticalException;
 
-class Login_model extends CI_Model {
+// Very funny
+class Login_model extends CI_Emerald_Model {
 
     public function __construct()
     {

@@ -1,3 +1,14 @@
+Vue.component("tree-item", {
+	template: "#item-template",
+	props: {
+		item: Object
+	},
+	data: function() {
+		return {
+			isOpen: false
+		};
+	}
+});
 var app = new Vue({
 	el: '#app',
 	data: {
@@ -42,6 +53,20 @@ var app = new Vue({
 			})
 	},
 	methods: {
+		sendComment: function() {
+			console.log('sendComment');
+			if (!this.post.id) {
+				alert('No post selected');
+				return;
+			}
+			axios.post('/main_page/comment', {
+				post_id: this.post.id,
+				message: this.commentText
+			}).then(function (response) {
+				console.log('sendComment() response:', response);
+				alert('Comment is added');
+			})
+		},
 		logout: function () {
 			console.log ('logout');
 		},
@@ -64,6 +89,7 @@ var app = new Vue({
 					.then(function (response) {
 						setTimeout(function () {
 							$('#loginModal').modal('hide');
+							window.location.reload();
 						}, 500);
 					})
 			}
@@ -79,9 +105,17 @@ var app = new Vue({
 					sum: self.addSum,
 				})
 					.then(function (response) {
-						setTimeout(function () {
-							$('#addModal').modal('hide');
-						}, 500);
+						if (response.data.status == 'success') {
+							setTimeout(function () {
+								$('#addModal').modal('hide');
+							}, 500);
+							return;
+						}
+
+						if (response.data.status == 'error') {
+							alert(response.data.error_message);
+						}
+
 					})
 			}
 		},
@@ -98,12 +132,18 @@ var app = new Vue({
 					}
 				})
 		},
-		addLike: function (id) {
+		addLike: function (id, type = null) {
+			console.log('addLike', [id, type]);
 			var self= this;
 			axios
-				.get('/main_page/like')
+				.get('/main_page/like/' + type + '/' + id)
 				.then(function (response) {
-					self.likes = response.data.likes;
+					if (response.data.status == 'error') {
+						alert(response.data.error_message);
+					}
+					if (response.data.status == 'success') {
+						self.likes = response.data.likes;
+					}
 				})
 
 		},

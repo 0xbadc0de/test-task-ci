@@ -15,6 +15,22 @@ use Model\User_model;
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="/css/app.css?v=<?= filemtime(FCPATH . '/css/app.css') ?>">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script type="text/x-template" id="item-template">
+        <li class="pl-4">
+            <div>
+                {{ item.personaname }} - <span class="text-muted">{{ item.text }}</span> <small>{{ item.replies_count }} ответов</small>
+            </div>
+            <ul v-if="+item.replies_count > 0">
+                <tree-item
+                        class="item"
+                        v-for="(child, index) in item.replies"
+                        :key="index"
+                        :item="child"
+                ></tree-item>
+            </ul>
+        </li>
+    </script>
 </head>
 <body>
 <div id="app">
@@ -28,7 +44,7 @@ use Model\User_model;
         <li class="nav-item">
             <?  if (User_model::is_logged()) {?>
               <a href="/main_page/logout" class="btn btn-primary my-2 my-sm-0"
-                 data-target="#loginModal">Log out, <?= $user->personaname?>
+                 data-target="#loginModal">Log out, <?= $user->personaname?> (<?= $user->wallet_balance ?>)
               </a>
             <? } else {?>
               <button type="button" class="btn btn-success my-2 my-sm-0" type="submit" data-toggle="modal"
@@ -164,7 +180,7 @@ use Model\User_model;
           <div class="card mb-3">
             <div class="post-img" v-bind:style="{ backgroundImage: 'url(' + post.img + ')' }"></div>
             <div class="card-body">
-              <div class="likes" @click="addLike(post.id)">
+              <div class="likes" @click="addLike(post.id, 'post')">
                 <div class="heart-wrap" v-if="!likes">
                   <div class="heart">
                     <svg class="bi bi-heart" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -182,8 +198,22 @@ use Model\User_model;
                   <span>{{likes}}</span>
                 </div>
               </div>
-              <p class="card-text" v-for="comment in post.coments"> {{comment.user.personaname + ' - '}}<small class="text-muted">{{comment.text}}</small></p>
-              <form class="form-inline">
+                <div class="comments-block mb-4">
+                    <div v-for="comment in post.coments">
+                        <span class="card-text">
+                            {{comment.user.personaname + ' - '}}
+                            <small class="text-muted">{{comment.text}}</small>
+                            <small>{{ comment.replies_count }} ответов</small>
+                        </span>
+                        <tree-item
+                                class="item"
+                                :item="reply"
+                                v-for="reply in comment.replies"
+                        ></tree-item>
+                    </div>
+
+                </div>
+              <form class="form-inline" @submit.prevent="sendComment">
                 <div class="form-group">
                   <input type="text" class="form-control" id="addComment" v-model="commentText">
                 </div>
@@ -210,6 +240,7 @@ use Model\User_model;
           </button>
         </div>
         <div class="modal-body">
+            <h4>User should have <strong>rights = 1 (admin)</strong> in table</h4>
           <form>
             <div class="form-group">
               <label for="exampleInputEmail1">Enter sum</label>

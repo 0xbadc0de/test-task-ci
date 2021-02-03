@@ -1,0 +1,40 @@
+server {
+
+  listen 127.0.0.1:80;
+  server_name test-task.local;
+  charset utf8;
+  send_timeout 300s;
+
+  gzip on;
+  gzip_comp_level 1;
+  gzip_proxied any;
+
+  limit_req zone=reqs burst=30;
+
+  access_log /home/alex/Dev/web/logs/test-task.local_access.log;
+  error_log /home/alex/Dev/web/logs/test-task.local_error.log;
+
+  root /home/alex/Dev/PhpstormProjects/backend_fullstack_task/public;
+  index index.php;
+
+  location / {
+    try_files $uri $uri/ /index.php?$args ;
+    expires max;
+  }
+
+  location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+    if (-e $request_filename) {
+
+      #fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+      fastcgi_pass localhost:9000;
+    }
+  }
+
+  location ~ /\.ht {
+    deny all;
+  }
+}
+
