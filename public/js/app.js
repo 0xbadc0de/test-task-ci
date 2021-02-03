@@ -105,9 +105,17 @@ var app = new Vue({
 					sum: self.addSum,
 				})
 					.then(function (response) {
-						setTimeout(function () {
-							$('#addModal').modal('hide');
-						}, 500);
+						if (response.data.status == 'success') {
+							setTimeout(function () {
+								$('#addModal').modal('hide');
+							}, 500);
+							return;
+						}
+
+						if (response.data.status == 'error') {
+							alert(response.data.error_message);
+						}
+
 					})
 			}
 		},

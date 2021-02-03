@@ -464,4 +464,14 @@ class User_model extends CI_Emerald_Model {
         return $o;
     }
 
+    /**
+     * Is user admin?
+     *
+     * @return bool
+     */
+    public function is_admin()
+    {
+        return (int)$this->rights === User_role::ROLE_ADMIN;
+    }
+
 }

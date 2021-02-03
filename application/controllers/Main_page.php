@@ -162,6 +162,10 @@ class Main_page extends MY_Controller
             return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
         }
 
+        if (!User_model::get_user()->is_admin()) {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_ACCESS);
+        }
+
         User_model::get_user()->increase_wallet_balance(
             $sum,
             'Incoming transaction (topup)',

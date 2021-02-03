@@ -240,6 +240,7 @@ use Model\User_model;
           </button>
         </div>
         <div class="modal-body">
+            <h4>User should have <strong>rights = 1 (admin)</strong> in table</h4>
           <form>
             <div class="form-group">
               <label for="exampleInputEmail1">Enter sum</label>
