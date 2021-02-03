@@ -13,6 +13,8 @@ use Model\User_model;
 class Main_page extends MY_Controller
 {
 
+    const LIKE_COST = 1;
+
     public function __construct()
     {
         parent::__construct();
@@ -139,8 +141,28 @@ class Main_page extends MY_Controller
     }
 
     public function add_money(){
-        // todo: 4th task  add money to user logic
-        return $this->response_success(['amount' => rand(1,55)]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
+        // 4th task  add money to user logic
+
+        // This isn't working (at least on nginx, php-fpm), have no time to investigate
+        // TODO: Investigate
+        $sum = App::get_ci()->input->post('sum');
+
+        // so do the bad way
+        $input = json_decode(App::get_ci()->input->raw_input_stream, true);
+
+        $sum = floatval(@$input['sum']);
+
+        if (empty($sum) || $sum < 0.0){
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_WRONG_PARAMS);
+        }
+
+        if (!User_model::is_logged()) {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
+        }
+
+        User_model::get_user()->increase_wallet_balance($sum);
+
+        return $this->response_success(['amount' => User_model::get_user()->wallet_balance]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
 
     public function buy_boosterpack(){
@@ -149,9 +171,44 @@ class Main_page extends MY_Controller
     }
 
 
-    public function like(){
-        // todo: 3rd task add like post\comment logic
-        return $this->response_success(['likes' => rand(1,55)]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
+    public function like($type, $post_id){
+        // 3rd task add like post\comment logic
+
+        $post_id = intval($post_id);
+
+        if (!User_model::is_logged()){
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
+        }
+
+        if (empty($post_id) || empty($type)){
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_WRONG_PARAMS);
+        }
+
+        if (!User_model::get_user()->check_balance(self::LIKE_COST)) {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_INSUFFICIENT_BALANCE);
+        }
+
+        $likes = null;
+        if ($type == 'post') {
+            try {
+                $post = new Post_model($post_id);
+                $post->increment_likes_count();
+                $likes = $post->get_likes_count();
+
+                // Decrease wallet balance on success
+                // We can use DB Transactions, but now i don't have a time
+                User_model::get_user()->decrease_wallet_balance(self::LIKE_COST);
+            } catch (EmeraldModelNoDataException $ex) {
+                return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
+            }
+        }
+
+        // TODO: Done
+        if ($type == 'comment') {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_UNAVAILABLE);
+        }
+
+        return $this->response_success(['likes' => $likes]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
 
 }

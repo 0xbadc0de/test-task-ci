@@ -28,9 +28,11 @@ class Post_model extends CI_Emerald_Model {
     /** @var string */
     protected $time_updated;
 
+    /** @var int */
+    protected $likes_count;
+
     // generated
     protected $comments;
-    protected $likes;
     protected $user;
 
 
@@ -135,9 +137,28 @@ class Post_model extends CI_Emerald_Model {
     /**
      * @return mixed
      */
-    public function get_likes()
+    public function get_likes_count()
     {
-        return $this->likes;
+        return $this->likes_count;
+    }
+
+    /**
+     * @param int $likes_count
+     * @return mixed
+     */
+    public function set_likes_count(int $likes_count)
+    {
+        $this->likes_count = $likes_count;
+        return $this->save('likes_count', $likes_count);
+    }
+
+    /**
+     * @return bool
+     */
+    public function increment_likes_count()
+    {
+        $this->likes_count++;
+        return $this->save('likes_count', $this->likes_count);
     }
 
     /**
@@ -292,7 +313,7 @@ class Post_model extends CI_Emerald_Model {
 
         $o->user = User_model::preparation($data->get_user(), 'main_page');
         $o->coments = Comment_model::preparation($data->get_comments(), 'full_info');
-        $o->likes = rand(0, 25);
+        $o->likes = $data->get_likes_count();
 
         $o->time_created = $data->get_time_created();
         $o->time_updated = $data->get_time_updated();

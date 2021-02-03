@@ -44,7 +44,7 @@ use Model\User_model;
         <li class="nav-item">
             <?  if (User_model::is_logged()) {?>
               <a href="/main_page/logout" class="btn btn-primary my-2 my-sm-0"
-                 data-target="#loginModal">Log out, <?= $user->personaname?>
+                 data-target="#loginModal">Log out, <?= $user->personaname?> (<?= $user->wallet_balance ?>)
               </a>
             <? } else {?>
               <button type="button" class="btn btn-success my-2 my-sm-0" type="submit" data-toggle="modal"
@@ -180,7 +180,7 @@ use Model\User_model;
           <div class="card mb-3">
             <div class="post-img" v-bind:style="{ backgroundImage: 'url(' + post.img + ')' }"></div>
             <div class="card-body">
-              <div class="likes" @click="addLike(post.id)">
+              <div class="likes" @click="addLike(post.id, 'post')">
                 <div class="heart-wrap" v-if="!likes">
                   <div class="heart">
                     <svg class="bi bi-heart" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

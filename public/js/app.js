@@ -124,12 +124,18 @@ var app = new Vue({
 					}
 				})
 		},
-		addLike: function (id) {
+		addLike: function (id, type = null) {
+			console.log('addLike', [id, type]);
 			var self= this;
 			axios
-				.get('/main_page/like')
+				.get('/main_page/like/' + type + '/' + id)
 				.then(function (response) {
-					self.likes = response.data.likes;
+					if (response.data.status == 'error') {
+						alert(response.data.error_message);
+					}
+					if (response.data.status == 'success') {
+						self.likes = response.data.likes;
+					}
 				})
 
 		},

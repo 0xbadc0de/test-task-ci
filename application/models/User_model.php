@@ -30,7 +30,7 @@ class User_model extends CI_Emerald_Model {
     /** @var int */
     protected $rights;
     /** @var float */
-    protected $wallet_balance;
+    public $wallet_balance;
     /** @var float */
     protected $wallet_total_refilled;
     /** @var float */
@@ -141,6 +141,17 @@ class User_model extends CI_Emerald_Model {
     }
 
     /**
+     * Check wallet balance
+     *
+     * @param float $sum
+     * @return bool
+     */
+    public function check_balance(float $sum): bool
+    {
+        return $this->wallet_balance >= $sum;
+    }
+
+    /**
      * @return float
      */
     public function get_wallet_balance(): float
@@ -157,6 +168,44 @@ class User_model extends CI_Emerald_Model {
     {
         $this->wallet_balance = $wallet_balance;
         return $this->save('wallet_balance', $wallet_balance);
+    }
+
+    /**
+     * Increase wallet balance
+     *
+     * @param float $sum
+     * @return bool
+     */
+    public function increase_wallet_balance(float $sum)
+    {
+        if ($sum < 0)
+            return false;
+
+        $this->wallet_balance += $sum;
+
+        $this->set_wallet_total_refilled($this->get_wallet_total_refilled() + $sum);
+
+        return $this->save('wallet_balance', $this->wallet_balance);
+    }
+
+    /**
+     * Decrease wallet balance
+     *
+     * @param float $sum
+     * @return bool
+     */
+    public function decrease_wallet_balance(float $sum)
+    {
+        if ($sum < 0)
+            return false;
+
+        $this->wallet_balance -= $sum;
+        if ($this->wallet_balance < 0)
+            $this->wallet_balance = 0;
+
+        $this->set_wallet_total_withdrawn($this->get_wallet_total_withdrawn() + $sum);
+
+        return $this->save('wallet_balance', $this->wallet_balance);
     }
 
     /**
@@ -381,6 +430,8 @@ class User_model extends CI_Emerald_Model {
 
             $o->personaname = $data->get_personaname();
             $o->avatarfull = $data->get_avatarfull();
+
+            $o->wallet_balance = $data->get_wallet_balance();
 
             $o->time_created = $data->get_time_created();
             $o->time_updated = $data->get_time_updated();
