@@ -1,5 +1,6 @@
 <?php
 
+use Model\Boosterpack_model;
 use Model\Login_model;
 use Model\Post_model;
 use Model\User_model;
@@ -166,8 +167,46 @@ class Main_page extends MY_Controller
     }
 
     public function buy_boosterpack(){
-        // todo: 5th task add money to user logic
-        return $this->response_success(['amount' => rand(1,55)]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
+        // 5th task add money to user logic
+
+        // This isn't working (at least on nginx, php-fpm), have no time to investigate
+        // TODO: Investigate
+        $id = App::get_ci()->input->post('id');
+
+        // so do the bad way
+        $input = json_decode(App::get_ci()->input->raw_input_stream, true);
+
+        $id = intval(@$input['id']);
+
+        if (!User_model::is_logged()){
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
+        }
+
+        if (empty($id)){
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_WRONG_PARAMS);
+        }
+
+        try {
+            $booster_pack = new Boosterpack_model($id);
+        } catch (EmeraldModelNoDataException $ex) {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
+        }
+
+        if (!User_model::get_user()->check_balance($booster_pack->get_price())) {
+            return $this->response_error(CI_Core::RESPONSE_GENERIC_INSUFFICIENT_BALANCE);
+        }
+
+        $topRandom = $booster_pack->get_price() + $booster_pack->get_bank();
+        $result = rand(1, $topRandom);
+        $bank = $booster_pack->get_price() - $result;
+        if ($bank < 0) {
+            $bank = 1;
+        }
+        $booster_pack->set_bank($bank);
+
+        User_model::get_user()->decrease_wallet_balance($booster_pack->get_price());
+
+        return $this->response_success(['amount' => $result]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
 
 
