@@ -174,9 +174,12 @@ class User_model extends CI_Emerald_Model {
      * Increase wallet balance
      *
      * @param float $sum
+     * @param string $description
+     * @param string $transactionSubject
+     * @param int|null $recordId
      * @return bool
      */
-    public function increase_wallet_balance(float $sum)
+    public function increase_wallet_balance(float $sum, string $description, string $transactionSubject, int $recordId = null): bool
     {
         if ($sum < 0)
             return false;
@@ -185,6 +188,15 @@ class User_model extends CI_Emerald_Model {
 
         $this->set_wallet_total_refilled($this->get_wallet_total_refilled() + $sum);
 
+        Transaction_model::create([
+            'user_id' => User_model::get_user()->id,
+            'transaction_type' => Transaction_type::TRANSACTION_TYPE_REFILL,
+            'transaction_subject' => $transactionSubject,
+            'transaction_record' => $recordId,
+            'description' => $description,
+            'amount' => $sum
+        ]);
+
         return $this->save('wallet_balance', $this->wallet_balance);
     }
 
@@ -192,9 +204,12 @@ class User_model extends CI_Emerald_Model {
      * Decrease wallet balance
      *
      * @param float $sum
+     * @param string $description
+     * @param string $transactionSubject
+     * @param int|null $recordId
      * @return bool
      */
-    public function decrease_wallet_balance(float $sum)
+    public function decrease_wallet_balance(float $sum, string $description, string $transactionSubject, int $recordId = null): bool
     {
         if ($sum < 0)
             return false;
@@ -204,6 +219,15 @@ class User_model extends CI_Emerald_Model {
             $this->wallet_balance = 0;
 
         $this->set_wallet_total_withdrawn($this->get_wallet_total_withdrawn() + $sum);
+
+        Transaction_model::create([
+            'user_id' => User_model::get_user()->id,
+            'transaction_type' => Transaction_type::TRANSACTION_TYPE_WITHDRAW,
+            'transaction_subject' => $transactionSubject,
+            'transaction_record' => $recordId,
+            'description' => $description,
+            'amount' => $sum
+        ]);
 
         return $this->save('wallet_balance', $this->wallet_balance);
     }

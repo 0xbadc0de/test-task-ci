@@ -3,6 +3,7 @@
 use Model\Boosterpack_model;
 use Model\Login_model;
 use Model\Post_model;
+use Model\Transaction_info;
 use Model\User_model;
 
 /**
@@ -161,7 +162,11 @@ class Main_page extends MY_Controller
             return $this->response_error(CI_Core::RESPONSE_GENERIC_NEED_AUTH);
         }
 
-        User_model::get_user()->increase_wallet_balance($sum);
+        User_model::get_user()->increase_wallet_balance(
+            $sum,
+            'Incoming transaction (topup)',
+            Transaction_info::TRANSACTION_TYPE_TOPUP
+        );
 
         return $this->response_success(['amount' => User_model::get_user()->wallet_balance]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
@@ -204,7 +209,20 @@ class Main_page extends MY_Controller
         }
         $booster_pack->set_bank($bank);
 
-        User_model::get_user()->decrease_wallet_balance($booster_pack->get_price());
+        User_model::get_user()->decrease_wallet_balance(
+            $booster_pack->get_price(),
+            sprintf('Purchase of booster pack #%d', $booster_pack->get_id()),
+            Transaction_info::TRANSACTION_TYPE_BOOSTER_PACK,
+            $booster_pack->get_id()
+        );
+
+        // Forgot about that in previous commit
+        User_model::get_user()->increase_wallet_balance(
+            $result,
+            sprintf('Opened booster pack #%d', $booster_pack->get_id()),
+            Transaction_info::TRANSACTION_TYPE_BOOSTER_PACK,
+            $booster_pack->get_id()
+        );
 
         return $this->response_success(['amount' => $result]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
@@ -236,7 +254,12 @@ class Main_page extends MY_Controller
 
                 // Decrease wallet balance on success
                 // We can use DB Transactions, but now i don't have a time
-                User_model::get_user()->decrease_wallet_balance(self::LIKE_COST);
+                User_model::get_user()->decrease_wallet_balance(
+                    self::LIKE_COST,
+                    sprintf('Like of post #%d', $post->get_id()),
+                    Transaction_info::TRANSACTION_TYPE_LIKE,
+                    $post->get_id()
+                );
             } catch (EmeraldModelNoDataException $ex) {
                 return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
             }
