@@ -29,6 +29,8 @@ class User_model extends CI_Emerald_Model {
     protected $avatarfull;
     /** @var int */
     protected $rights;
+    /** @var int */
+    protected $likes_balance;
     /** @var float */
     public $wallet_balance;
     /** @var float */
@@ -154,6 +156,89 @@ class User_model extends CI_Emerald_Model {
     /**
      * @return float
      */
+    public function get_likes_balance(): float
+    {
+        return $this->likes_balance;
+    }
+
+    /**
+     * @param float $likes_balance
+     * @return bool
+     */
+    public function set_likes_balance(float $likes_balance): bool
+    {
+        $this->likes_balance = $likes_balance;
+        return $this->save('likes_balance', $likes_balance);
+    }
+
+    /**
+     * @param float $sum
+     * @return bool
+     */
+    public function check_likes_balance(float $sum): bool
+    {
+        return $this->likes_balance >= $sum;
+    }
+
+    /**
+     * @param float $sum
+     * @param string $description
+     * @param string $transactionSubject
+     * @param int|null $recordId
+     * @return bool
+     */
+    public function increase_likes_balance(float $sum, string $description, string $transactionSubject, int $recordId = null): bool
+    {
+        if ($sum < 0)
+            return false;
+
+        $this->likes_balance += $sum;
+
+        Transaction_model::create([
+            'user_id' => User_model::get_user()->id,
+            'transaction_type' => Transaction_type::TRANSACTION_TYPE_REFILL,
+            'transaction_subject' => $transactionSubject,
+            'transaction_record' => $recordId,
+            'wallet_type' => Wallet_type::WALLET_TYPE_LIKES,
+            'description' => $description,
+            'amount' => $sum
+        ]);
+
+        return $this->save('likes_balance', $this->likes_balance);
+    }
+
+    /**
+     * @param float $sum
+     * @param string $description
+     * @param string $transactionSubject
+     * @param int|null $recordId
+     * @return bool
+     */
+    public function decrease_likes_balance(float $sum, string $description, string $transactionSubject, int $recordId = null): bool
+    {
+        if ($sum < 0)
+            return false;
+
+        $this->likes_balance -= $sum;
+        if ($this->likes_balance < 0)
+            $this->likes_balance = 0;
+
+        Transaction_model::create([
+            'user_id' => User_model::get_user()->id,
+            'transaction_type' => Transaction_type::TRANSACTION_TYPE_REFILL,
+            'transaction_subject' => $transactionSubject,
+            'transaction_record' => $recordId,
+            'wallet_type' => Wallet_type::WALLET_TYPE_LIKES,
+            'description' => $description,
+            'amount' => $sum
+        ]);
+
+        return $this->save('likes_balance', $this->likes_balance);
+    }
+
+    /**
+     * @return float
+     */
     public function get_wallet_balance(): float
     {
         return $this->wallet_balance;
@@ -193,6 +278,7 @@ class User_model extends CI_Emerald_Model {
             'transaction_type' => Transaction_type::TRANSACTION_TYPE_REFILL,
             'transaction_subject' => $transactionSubject,
             'transaction_record' => $recordId,
+            'wallet_type' => Wallet_type::WALLET_TYPE_GENERIC,
             'description' => $description,
             'amount' => $sum
         ]);
@@ -225,6 +311,7 @@ class User_model extends CI_Emerald_Model {
             'transaction_type' => Transaction_type::TRANSACTION_TYPE_WITHDRAW,
             'transaction_subject' => $transactionSubject,
             'transaction_record' => $recordId,
+            'wallet_type' => Wallet_type::WALLET_TYPE_GENERIC,
             'description' => $description,
             'amount' => $sum
         ]);

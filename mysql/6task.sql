@@ -4,13 +4,13 @@
  */
 
 SELECT
-    user_id, transaction_type, transaction_record AS bootster_pack_id, SUM(amount)
+    user_id, transaction_type, transaction_record AS bootster_pack_id, wallet_type, SUM(amount)
 FROM
     test_task.transaction
 WHERE
         transaction_subject = 'booster_pack'
   AND time_created BETWEEN SUBDATE(CURDATE(), INTERVAL 1 MONTH) AND NOW()
-GROUP BY user_id, transaction_type, transaction_record;
+GROUP BY user_id, transaction_type, transaction_record, wallet_type;
 
 
 /*
@@ -20,8 +20,9 @@ GROUP BY user_id, transaction_type, transaction_record;
  */
 SELECT
     user_id,
-    u.likes_balance AS likes_balance,
-    u.wallet_balance AS wallet_balance,
+    wallet_type,
+    u.likes_balance AS current_likes_balance,
+    u.wallet_balance AS current_wallet_balance,
     SUM(amount),
     transaction_type,
     transaction_subject
@@ -31,4 +32,4 @@ FROM
     user u ON u.id = user_id
 WHERE
         transaction_subject IN ('topup' , 'booster_pack')
-GROUP BY user_id , transaction_type , transaction_subject
+GROUP BY user_id , transaction_type, wallet_type

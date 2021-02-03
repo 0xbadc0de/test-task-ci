@@ -220,8 +220,7 @@ class Main_page extends MY_Controller
             $booster_pack->get_id()
         );
 
-        // Forgot about that in previous commit
-        User_model::get_user()->increase_wallet_balance(
+        User_model::get_user()->increase_likes_balance(
             $result,
             sprintf('Opened booster pack #%d', $booster_pack->get_id()),
             Transaction_info::TRANSACTION_TYPE_BOOSTER_PACK,
@@ -245,7 +244,7 @@ class Main_page extends MY_Controller
             return $this->response_error(CI_Core::RESPONSE_GENERIC_WRONG_PARAMS);
         }
 
-        if (!User_model::get_user()->check_balance(self::LIKE_COST)) {
+        if (!User_model::get_user()->check_likes_balance(self::LIKE_COST)) {
             return $this->response_error(CI_Core::RESPONSE_GENERIC_INSUFFICIENT_BALANCE);
         }
 
@@ -258,7 +257,7 @@ class Main_page extends MY_Controller
 
                 // Decrease wallet balance on success
                 // We can use DB Transactions, but now i don't have a time
-                User_model::get_user()->decrease_wallet_balance(
+                User_model::get_user()->decrease_likes_balance(
                     self::LIKE_COST,
                     sprintf('Like of post #%d', $post->get_id()),
                     Transaction_info::TRANSACTION_TYPE_LIKE,

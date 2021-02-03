@@ -19,6 +19,8 @@ class Transaction_model extends CI_Emerald_Model
     /** @var int */
     public $transaction_record;
     /** @var string */
+    public $wallet_type;
+    /** @var string */
     public $description;
     /** @var float */
     public $amount;
@@ -66,6 +68,24 @@ class Transaction_model extends CI_Emerald_Model
     {
         $this->amount = $amount;
         return $this->save('amount', $amount);
+    }
+
+    /**
+     * @return string
+     */
+    public function get_wallet_type(): string
+    {
+        return $this->wallet_type;
+    }
+
+    /**
+     * @param string $wallet_type
+     * @return bool
+     */
+    public function set_wallet_type(string $wallet_type): bool
+    {
+        $this->wallet_type = $wallet_type;
+        return $this->save('wallet_type', $wallet_type);
     }
 
     /**
